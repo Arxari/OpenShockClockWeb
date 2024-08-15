@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenShockClock</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>OpenShockClock</h1>
+
+        <div class="alarm-list">
+            {% for name, alarm in alarms.items() %}
+                <div class="alarm" data-alarm-time="{{ alarm[0].strftime('%Y-%m-%dT%H:%M:%S') }}">
+                    <h3>{{ name }}</h3>
+                    <p>Intensity: {{ alarm[1] }}</p>
+                    <p>Duration: {{ alarm[2] / 1000 }} seconds</p>
+                    <p>Time Until Shock: <span class="countdown"></span></p>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="buttons">
+            <a href="{{ url_for('add_alarm') }}">
+                <button>Add Alarm</button>
+            </a>
+            <a href="{{ url_for('setup') }}">
+                <button>Setup API and Shocker ID</button>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function updateCountdowns() {
+            const now = new Date().getTime();
+            document.querySelectorAll('.alarm').forEach(alarm => {
+                const alarmTime = new Date(alarm.dataset.alarmTime).getTime();
+                const timeDifference = alarmTime - now;
+
+                if (timeDifference > 0) {
+                    const hours = Math.floor(timeDifference / (1000 * 60 * 60));
+                    const minutes = Math.floor((timeDifference % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((timeDifference % (1000 * 60)) / 1000);
+                    alarm.querySelector('.countdown').textContent = `${hours}h ${minutes}m ${seconds}s`;
+                } else {
+                    alarm.querySelector('.countdown').textContent = 'Alarm time reached!';
+                    // Adjust the display time to reflect next day's alarm
+                    const nextAlarmTime = new Date(alarmTime + 24 * 60 * 60 * 1000);
+                    alarm.dataset.alarmTime = nextAlarmTime.toISOString();
+                }
+            });
+        }
+
+        setInterval(updateCountdowns, 1000);
+    </script>
+</body>
+</html>
