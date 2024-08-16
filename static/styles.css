@@ -20,7 +20,7 @@ h1, h3 {
 
 .alarm-list {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 10px;
 }
 
@@ -28,6 +28,14 @@ h1, h3 {
     padding: 15px;
     border-radius: 5px;
     background-color: #131516;
+    flex: 1 1 calc(33.33% - 20px);
+    margin: 10px 0;
+}
+
+@media screen and (max-width: 768px) {
+    .alarm {
+        flex: 1 1 100%;
+    }
 }
 
 .countdown {
@@ -42,7 +50,7 @@ button {
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    margin: 5px 0;
+    margin: 5px;
 }
 
 button:hover {
@@ -61,8 +69,9 @@ a:hover {
 
 .buttons {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     gap: 10px;
+    justify-content: flex-start;
 }
 
 input[type="text"], input[type="number"], input[type="time"], select {
