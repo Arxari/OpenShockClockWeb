@@ -3,24 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Setup</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Setup OpenShockClock</title>
 </head>
 <body>
     <div class="container">
-        <h1>Setup API and Shocker ID</h1>
-        <form method="post">
-            <div>
-                <label for="api_key">API Key:</label>
-                <input type="text" name="api_key" id="api_key" required>
+        <h1>Setup OpenShockClock</h1>
+        <form method="POST">
+            <div class="form-group">
+                <label for="api_key">OpenShock API Key</label>
+                <input type="text" id="api_key" name="api_key" value="{{ api_key if api_key else '' }}">
             </div>
-            <div>
-                <label for="shock_id">Shocker ID:</label>
-                <input type="text" name="shock_id" id="shock_id" required>
+            <div class="form-group">
+                <label for="shock_id">OpenShock Shocker ID</label>
+                <input type="text" id="shock_id" name="shock_id" value="{{ shock_id if shock_id else '' }}">
             </div>
-            <button type="submit">Save Setup</button>
+            <button type="submit">Save</button>
         </form>
-        <a href="{{ url_for('index') }}">Back to Home</a>
     </div>
 </body>
 </html>
