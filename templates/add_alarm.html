@@ -3,32 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Alarm</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <title>Add New Alarm</title>
+    <style>
+        .days-container {
+            position: relative;
+        }
+
+        .days-dropdown {
+            position: relative;
+            width: 100%;
+            padding: 10px;
+            background-color: #1a1d1f;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .days-dropdown:focus {
+            outline: none;
+            background-color: #1f2224;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #1a1d1f;
+            min-width: 100%;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            padding: 12px 16px;
+            z-index: 1;
+            border-radius: 5px;
+        }
+
+        .dropdown-content label {
+            display: block;
+            margin: 8px 0;
+            color: #ffffff;
+        }
+
+        .days-container:hover .dropdown-content {
+            display: block;
+        }
+
+        .repeat-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .repeat-label {
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1>Add New Alarm</h1>
-        <form method="post">
-            <div>
+        <h2>Add New Alarm</h2>
+        <form action="{{ url_for('add_alarm') }}" method="post">
+            <div class="form-group">
                 <label for="name">Alarm Name:</label>
-                <input type="text" name="name" id="name" required>
+                <input type="text" id="name" name="name" required>
             </div>
-            <div>
-                <label for="intensity">Intensity (0-100):</label>
-                <input type="number" name="intensity" id="intensity" min="0" max="100" required>
+
+            <div class="form-group">
+                <label for="intensity">Intensity:</label>
+                <input type="number" id="intensity" name="intensity" min="1" max="100" required>
             </div>
-            <div>
-                <label for="duration">Duration (seconds):</label>
-                <input type="number" name="duration" id="duration" min="0.3" max="30" step="0.1" required>
+
+            <div class="form-group">
+                <label for="duration">Length (seconds):</label>
+                <input type="number" id="duration" name="duration" min="0.1" max="30" step="0.1" required>
             </div>
-            <div>
-                <label for="time">Time (HH:MM):</label>
-                <input type="time" name="time" id="time" required>
+
+            <div class="form-group">
+                <label for="time">Time:</label>
+                <input type="text" id="time" name="time" class="timepicker" required>
             </div>
+
+            <div class="form-group days-container">
+                <label for="days">Select Days:</label>
+                <button type="button" class="days-dropdown">Select Days</button>
+                <div class="dropdown-content" id="days">
+                    <label><input type="checkbox" name="days" value="Monday"> Monday</label>
+                    <label><input type="checkbox" name="days" value="Tuesday"> Tuesday</label>
+                    <label><input type="checkbox" name="days" value="Wednesday"> Wednesday</label>
+                    <label><input type="checkbox" name="days" value="Thursday"> Thursday</label>
+                    <label><input type="checkbox" name="days" value="Friday"> Friday</label>
+                    <label><input type="checkbox" name="days" value="Saturday"> Saturday</label>
+                    <label><input type="checkbox" name="days" value="Sunday"> Sunday</label>
+                </div>
+            </div>
+
+            <div class="form-group repeat-container">
+                <label class="repeat-label" for="repeat">Repeat Alarm:</label>
+                <div class="toggle-button" id="repeatToggle" onclick="toggleRepeat(this)">
+                    <div class="toggle-thumb"></div>
+                </div>
+                <input type="hidden" id="repeat" name="repeat" value="false">
+            </div>
+
             <button type="submit">Save Alarm</button>
         </form>
-        <a href="{{ url_for('index') }}">Back to Home</a>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const timeInput = document.getElementById('time');
+            timeInput.type = 'time';
+            timeInput.step = 60; // step in seconds, e.g., 60 for 1-minute intervals
+        });
+
+        function toggleRepeat(element) {
+            const input = document.getElementById('repeat');
+            const isActive = element.classList.toggle('active');
+            input.value = isActive;
+        }
+    </script>
 </body>
 </html>
