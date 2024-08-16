@@ -31,10 +31,12 @@ def load_config():
             alarm_time = datetime.strptime(config[section]['time'], '%Y-%m-%d %H:%M:%S')
             intensity = int(config[section]['intensity'])
             duration = int(config[section]['duration'])
-            alarms[section] = (alarm_time, intensity, duration)
+            days = config[section].get('days', '')
+            loop = config[section].get('loop', 'False') == 'True'
+            alarms[section] = (alarm_time, intensity, duration, days.split(','), loop)
     return alarms
 
-def save_alarm_to_config(alarm_name, alarm_time, intensity, duration):
+def save_alarm_to_config(alarm_name, alarm_time, intensity, duration, days, loop):
     """Saves an alarm to the config.txt file."""
     config = configparser.ConfigParser()
     if os.path.exists(CONFIG_FILE):
@@ -43,7 +45,9 @@ def save_alarm_to_config(alarm_name, alarm_time, intensity, duration):
     config[alarm_name] = {
         'time': alarm_time.strftime('%Y-%m-%d %H:%M:%S'),
         'intensity': str(intensity),
-        'duration': str(duration)
+        'duration': str(duration),
+        'days': ','.join(days),
+        'loop': str(loop)
     }
 
     with open(CONFIG_FILE, 'w') as configfile:
@@ -78,11 +82,12 @@ def update_alarms(alarms, api_key, shock_id):
     """Updates the alarms for the next day and checks if they need to be triggered."""
     while True:
         now = datetime.now()
-        for name, (alarm_time, intensity, duration) in list(alarms.items()):
-            if now >= alarm_time:
+        for name, (alarm_time, intensity, duration, days, loop) in list(alarms.items()):
+            if loop and now.strftime('%A') in days and now >= alarm_time:
                 trigger_shock(api_key, shock_id, intensity, duration)
-                alarms[name] = (alarm_time + timedelta(days=1), intensity, duration)
-                save_alarm_to_config(name, alarms[name][0], intensity, duration)
+                # Reschedule alarm for the next day
+                alarms[name] = (alarm_time + timedelta(days=1), intensity, duration, days, loop)
+                save_alarm_to_config(name, alarms[name][0], intensity, duration, days, loop)
         time.sleep(60)
 
 @app.route('/')
@@ -105,7 +110,9 @@ def add_alarm():
         )
         if alarm_time < datetime.now():
             alarm_time += timedelta(days=1)
-        save_alarm_to_config(name, alarm_time, intensity, duration)
+        days = request.form.getlist('days')
+        loop = 'loop' in request.form
+        save_alarm_to_config(name, alarm_time, intensity, duration, days, loop)
         return redirect(url_for('index'))
     return render_template('add_alarm.html')
 
