@@ -19,7 +19,7 @@ def load_env():
         api_key = os.getenv('SHOCK_API_KEY')
         shock_id = os.getenv('SHOCK_ID')
         return api_key, shock_id
-    return None, None
+    return None, None 
 
 def load_config():
     """Loads saved alarms from the config.txt file."""
@@ -81,7 +81,6 @@ def update_alarms(alarms, api_key, shock_id):
         for name, (alarm_time, intensity, duration) in list(alarms.items()):
             if now >= alarm_time:
                 trigger_shock(api_key, shock_id, intensity, duration)
-                # Reschedule alarm for the next day
                 alarms[name] = (alarm_time + timedelta(days=1), intensity, duration)
                 save_alarm_to_config(name, alarms[name][0], intensity, duration)
         time.sleep(60)
@@ -119,13 +118,13 @@ def setup():
             f.write(f"SHOCK_API_KEY={api_key}\n")
             f.write(f"SHOCK_ID={shock_id}\n")
         return redirect(url_for('index'))
-    return render_template('setup.html')
+    else:
+        api_key, shock_id = load_env()
+        return render_template('setup.html', api_key=api_key, shock_id=shock_id)
 
 if __name__ == '__main__':
     api_key, shock_id = load_env()
     alarms = load_config()
-    # Start a background thread for updating alarms
     alarm_thread = threading.Thread(target=update_alarms, args=(alarms, api_key, shock_id), daemon=True)
     alarm_thread.start()
-    # Start the Flask app
     app.run(debug=True)
