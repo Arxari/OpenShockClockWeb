@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <title>Add New Alarm</title>
-    <!-- Additional styling for the dropdown -->
     <style>
-        /* Scoped styles for the days dropdown within the form */
         .days-container {
             position: relative;
         }
@@ -112,7 +110,6 @@
     </div>
 
     <script>
-        // Initialize the timepicker with AM/PM format
         document.addEventListener('DOMContentLoaded', function () {
             const timeInput = document.getElementById('time');
             timeInput.type = 'time';
