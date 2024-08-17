@@ -92,23 +92,28 @@ def update_alarms(api_key, shock_id):
         with alarms_lock:
             for name in list(alarms.keys()):
                 alarm_time, intensity, duration, days, repeat = alarms[name]
-                
+
+                # Skip if today is not one of the selected days
                 if days and now.strftime('%A') not in days:
-                    continue 
-                    
+                    continue
+
                 if now >= alarm_time:
+                    # Trigger the shock
                     trigger_shock(api_key, shock_id, intensity, duration)
-                    
+
                     if repeat:
-                        next_day = (alarm_time + timedelta(days=1)).strftime('%A')
-                        while next_day not in days:
-                            alarm_time += timedelta(days=1)
-                            next_day = alarm_time.strftime('%A')
+                        # Calculate the next alarm time based on selected days
                         next_alarm_time = alarm_time + timedelta(days=1)
+                        while next_alarm_time.strftime('%A') not in days:
+                            next_alarm_time += timedelta(days=1)
+
+                        # Update the alarm with the new time and save it to config
                         alarms[name] = (next_alarm_time, intensity, duration, days, repeat)
                         save_alarm_to_config(name, next_alarm_time, intensity, duration, days, repeat)
                     else:
+                        # Remove the alarm if it is not set to repeat
                         del alarms[name]
+
         time.sleep(30)
 
 @app.route('/')
