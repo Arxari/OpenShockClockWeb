@@ -12,7 +12,7 @@ A python flask implementation of [OpenShockClock](https://github.com/Arxari/Open
 
 #### v0.9.0 - To be revealed
 - User accounts
-- Quality of life features, such as setting the alarms for specific days of the week
+- ~~Quality of life features, such as setting the alarms for specific days of the week~~ Moved to v0.7.0
 
 #### v1.0.0 - To be revealed
 - A public use instance
