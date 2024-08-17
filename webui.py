@@ -12,6 +12,9 @@ app = Flask(__name__)
 ENV_FILE = os.path.join(os.path.dirname(__file__), '.env')
 CONFIG_FILE = os.path.join(os.path.dirname(__file__), 'config.txt')
 
+alarms = {}
+alarms_lock = threading.Lock()
+
 def load_env():
     """Loads the API key and Shock ID from the .env file."""
     if os.path.exists(ENV_FILE):
@@ -19,39 +22,43 @@ def load_env():
         api_key = os.getenv('SHOCK_API_KEY')
         shock_id = os.getenv('SHOCK_ID')
         return api_key, shock_id
-    return None, None 
+    return None, None
 
 def load_config():
     """Loads saved alarms from the config.txt file."""
-    alarms = {}
-    config = configparser.ConfigParser()
-    if os.path.exists(CONFIG_FILE):
-        config.read(CONFIG_FILE)
-        for section in config.sections():
-            alarm_time = datetime.strptime(config[section]['time'], '%Y-%m-%d %H:%M:%S')
-            intensity = int(config[section]['intensity'])
-            duration = int(config[section]['duration'])
-            days = config[section].get('days', '')
-            loop = config[section].get('loop', 'False') == 'True'
-            alarms[section] = (alarm_time, intensity, duration, days.split(','), loop)
-    return alarms
+    with alarms_lock:
+        alarms.clear()
+        config = configparser.ConfigParser()
+        if os.path.exists(CONFIG_FILE):
+            config.read(CONFIG_FILE)
+            for section in config.sections():
+                alarm_time = datetime.strptime(config[section]['time'], '%Y-%m-%d %H:%M:%S')
+                intensity = int(config[section]['intensity'])
+                duration = int(config[section]['duration'])
+                days = config[section].get('days', '').split(',')
+                days = [day for day in days if day]  # Remove empty strings
+                repeat = config[section].getboolean('repeat', False)
+                alarms[section] = (alarm_time, intensity, duration, days, repeat)
 
-def save_alarm_to_config(alarm_name, alarm_time, intensity, duration, days, loop):
+def save_alarm_to_config(alarm_name, alarm_time, intensity, duration, days, repeat):
     """Saves an alarm to the config.txt file."""
-    config = configparser.ConfigParser()
-    if os.path.exists(CONFIG_FILE):
-        config.read(CONFIG_FILE)
+    with alarms_lock:
+        config = configparser.ConfigParser()
+        if os.path.exists(CONFIG_FILE):
+            config.read(CONFIG_FILE)
 
-    config[alarm_name] = {
-        'time': alarm_time.strftime('%Y-%m-%d %H:%M:%S'),
-        'intensity': str(intensity),
-        'duration': str(duration),
-        'days': ','.join(days),
-        'loop': str(loop)
-    }
+        config[alarm_name] = {
+            'time': alarm_time.strftime('%Y-%m-%d %H:%M:%S'),
+            'intensity': str(intensity),
+            'duration': str(duration),
+            'days': ','.join(days),
+            'repeat': str(repeat)
+        }
 
-    with open(CONFIG_FILE, 'w') as configfile:
-        config.write(configfile)
+        with open(CONFIG_FILE, 'w') as configfile:
+            config.write(configfile)
+
+        alarms[alarm_name] = (alarm_time, intensity, duration, days, repeat)
 
 def trigger_shock(api_key, shock_id, intensity, duration):
     """Sends a shock command to the OpenShock API."""
@@ -61,7 +68,7 @@ def trigger_shock(api_key, shock_id, intensity, duration):
         'OpenShockToken': api_key,
         'Content-Type': 'application/json'
     }
-    
+
     payload = {
         'shocks': [{
             'id': shock_id,
@@ -72,29 +79,50 @@ def trigger_shock(api_key, shock_id, intensity, duration):
         }],
         'customName': 'OpenShockClock'
     }
-    
+
     response = requests.post(url=url, headers=headers, json=payload)
-    
+
     if response.status_code != 200:
         print(f"Failed to send shock. Response: {response.content}")
 
-def update_alarms(alarms, api_key, shock_id):
-    """Updates the alarms for the next day and checks if they need to be triggered."""
+def update_alarms(api_key, shock_id):
+    """Updates the alarms and triggers them on the specified days."""
     while True:
         now = datetime.now()
-        for name, (alarm_time, intensity, duration, days, loop) in list(alarms.items()):
-            if loop and now.strftime('%A') in days and now >= alarm_time:
-                trigger_shock(api_key, shock_id, intensity, duration)
-                # Reschedule alarm for the next day
-                alarms[name] = (alarm_time + timedelta(days=1), intensity, duration, days, loop)
-                save_alarm_to_config(name, alarms[name][0], intensity, duration, days, loop)
-        time.sleep(60)
+        with alarms_lock:
+            for name in list(alarms.keys()):
+                alarm_time, intensity, duration, days, repeat = alarms[name]
+                
+                # Check if today is one of the specified days
+                if days and now.strftime('%A') not in days:
+                    continue  # Skip this alarm if today is not in the specified days
+                
+                # Check if the current time is greater than or equal to the alarm time
+                if now >= alarm_time:
+                    trigger_shock(api_key, shock_id, intensity, duration)
+                    
+                    if repeat:
+                        # Schedule for the next occurrence on the correct day
+                        next_day = (alarm_time + timedelta(days=1)).strftime('%A')
+                        while next_day not in days:
+                            alarm_time += timedelta(days=1)
+                            next_day = alarm_time.strftime('%A')
+                        next_alarm_time = alarm_time + timedelta(days=1)
+                        alarms[name] = (next_alarm_time, intensity, duration, days, repeat)
+                        save_alarm_to_config(name, next_alarm_time, intensity, duration, days, repeat)
+                    else:
+                        del alarms[name]
+        time.sleep(30)
 
 @app.route('/')
 def index():
-    api_key, shock_id = load_env()
-    alarms = load_config()
-    return render_template('index.html', alarms=alarms)
+    with alarms_lock:
+        current_alarms = alarms.copy()
+    return render_template('index.html', alarms=current_alarms)
+
+@app.route('/setup')
+def setup():
+    return render_template('setup.html')
 
 @app.route('/add', methods=['GET', 'POST'])
 def add_alarm():
@@ -103,35 +131,36 @@ def add_alarm():
         intensity = int(request.form['intensity'])
         duration = int(float(request.form['duration']) * 1000)
         time_str = request.form['time']
-        alarm_time = datetime.strptime(time_str, "%H:%M").replace(
-            year=datetime.now().year,
-            month=datetime.now().month,
-            day=datetime.now().day
-        )
-        if alarm_time < datetime.now():
-            alarm_time += timedelta(days=1)
+        repeat = request.form.get('repeat') == 'true'
         days = request.form.getlist('days')
-        loop = 'loop' in request.form
-        save_alarm_to_config(name, alarm_time, intensity, duration, days, loop)
+
+        now = datetime.now()
+        alarm_time = datetime.strptime(f"{now.strftime('%Y-%m-%d')} {time_str}", '%Y-%m-%d %H:%M')
+        if alarm_time < now:
+            alarm_time += timedelta(days=1)
+
+        save_alarm_to_config(name, alarm_time, intensity, duration, days, repeat)
+
         return redirect(url_for('index'))
+
     return render_template('add_alarm.html')
 
-@app.route('/setup', methods=['GET', 'POST'])
-def setup():
-    if request.method == 'POST':
-        api_key = request.form['api_key']
-        shock_id = request.form['shock_id']
-        with open(ENV_FILE, 'w') as f:
-            f.write(f"SHOCK_API_KEY={api_key}\n")
-            f.write(f"SHOCK_ID={shock_id}\n")
-        return redirect(url_for('index'))
-    else:
-        api_key, shock_id = load_env()
-        return render_template('setup.html', api_key=api_key, shock_id=shock_id)
+@app.route('/delete/<alarm_name>')
+def delete_alarm(alarm_name):
+    with alarms_lock:
+        config = configparser.ConfigParser()
+        if os.path.exists(CONFIG_FILE):
+            config.read(CONFIG_FILE)
+            if config.has_section(alarm_name):
+                config.remove_section(alarm_name)
+                with open(CONFIG_FILE, 'w') as configfile:
+                    config.write(configfile)
+                alarms.pop(alarm_name, None)
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     api_key, shock_id = load_env()
-    alarms = load_config()
-    alarm_thread = threading.Thread(target=update_alarms, args=(alarms, api_key, shock_id), daemon=True)
+    load_config()
+    alarm_thread = threading.Thread(target=update_alarms, args=(api_key, shock_id), daemon=True)
     alarm_thread.start()
     app.run(debug=True)
