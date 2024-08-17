@@ -111,6 +111,10 @@ def update_alarms(api_key, shock_id):
                         del alarms[name]
         time.sleep(30)
 
+#               _-^-_
+#               | | |
+#               —————
+
 @app.route('/')
 def index():
     with alarms_lock:
