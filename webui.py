@@ -93,16 +93,13 @@ def update_alarms(api_key, shock_id):
             for name in list(alarms.keys()):
                 alarm_time, intensity, duration, days, repeat = alarms[name]
                 
-                # Check if today is one of the specified days
                 if days and now.strftime('%A') not in days:
-                    continue  # Skip this alarm if today is not in the specified days
-                
-                # Check if the current time is greater than or equal to the alarm time
+                    continue 
+                    
                 if now >= alarm_time:
                     trigger_shock(api_key, shock_id, intensity, duration)
                     
                     if repeat:
-                        # Schedule for the next occurrence on the correct day
                         next_day = (alarm_time + timedelta(days=1)).strftime('%A')
                         while next_day not in days:
                             alarm_time += timedelta(days=1)
