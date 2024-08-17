@@ -52,7 +52,6 @@
                         weekday: "long",
                     });
 
-                    // Adjust the alarmTime to the next valid day if today is not in the days list
                     let nextAlarmTime = alarmTime;
                     if (!days.includes(nowDay)) {
                         let nextDayOffset = 0;

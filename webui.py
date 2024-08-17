@@ -36,7 +36,7 @@ def load_config():
                 intensity = int(config[section]['intensity'])
                 duration = int(config[section]['duration'])
                 days = config[section].get('days', '').split(',')
-                days = [day for day in days if day]  # Remove empty strings
+                days = [day for day in days if day]  # please don't crucify me for this
                 repeat = config[section].getboolean('repeat', False)
                 alarms[section] = (alarm_time, intensity, duration, days, repeat)
 
@@ -93,27 +93,22 @@ def update_alarms(api_key, shock_id):
             for name in list(alarms.keys()):
                 alarm_time, intensity, duration, days, repeat = alarms[name]
 
-                # Skip if today is not one of the selected days
                 if days and now.strftime('%A') not in days:
                     continue
 
                 if now >= alarm_time:
-                    # Trigger the shock
                     trigger_shock(api_key, shock_id, intensity, duration)
 
                     if repeat:
-                        # Calculate the next alarm time based on selected days
+                        next_day = (alarm_time + timedelta(days=1)).strftime('%A')
+                        while next_day not in days:
+                            alarm_time += timedelta(days=1)
+                            next_day = alarm_time.strftime('%A')
                         next_alarm_time = alarm_time + timedelta(days=1)
-                        while next_alarm_time.strftime('%A') not in days:
-                            next_alarm_time += timedelta(days=1)
-
-                        # Update the alarm with the new time and save it to config
                         alarms[name] = (next_alarm_time, intensity, duration, days, repeat)
                         save_alarm_to_config(name, next_alarm_time, intensity, duration, days, repeat)
                     else:
-                        # Remove the alarm if it is not set to repeat
                         del alarms[name]
-
         time.sleep(30)
 
 @app.route('/')
@@ -122,9 +117,25 @@ def index():
         current_alarms = alarms.copy()
     return render_template('index.html', alarms=current_alarms)
 
-@app.route('/setup')
+@app.route('/setup', methods=['GET', 'POST'])
 def setup():
-    return render_template('setup.html')
+    api_key, shock_id = load_env()
+
+    if request.method == 'POST':
+        api_key = request.form['api_key']
+        shock_id = request.form['shock_id']
+
+        with open(ENV_FILE, 'w') as env_file:
+            env_file.write(f'SHOCK_API_KEY={api_key}\n')
+            env_file.write(f'SHOCK_ID={shock_id}\n')
+
+        load_dotenv(ENV_FILE)
+
+        api_key, shock_id = load_env()
+
+        return redirect(url_for('index'))
+
+    return render_template('setup.html', api_key=api_key, shock_id=shock_id)
 
 @app.route('/add', methods=['GET', 'POST'])
 def add_alarm():
