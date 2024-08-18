@@ -36,7 +36,7 @@ def load_config():
                 intensity = int(config[section]['intensity'])
                 duration = int(config[section]['duration'])
                 days = config[section].get('days', '').split(',')
-                days = [day for day in days if day]  # please don't crucify me for this
+                days = [day for day in days if day]  # Remove empty strings
                 repeat = config[section].getboolean('repeat', False)
                 alarms[section] = (alarm_time, intensity, duration, days, repeat)
 
@@ -80,10 +80,19 @@ def trigger_shock(api_key, shock_id, intensity, duration):
         'customName': 'OpenShockClock'
     }
 
-    response = requests.post(url=url, headers=headers, json=payload)
+    print(f"Triggering shock with headers: {headers}")
+    print(f"Payload being sent: {payload}")
 
-    if response.status_code != 200:
-        print(f"Failed to send shock. Response: {response.content}")
+    try:
+        response = requests.post(url=url, headers=headers, json=payload)
+        print(f"API Response: {response.status_code} - {response.text}")
+
+        if response.status_code != 200:
+            print(f"Failed to send shock. Response: {response.content}")
+        else:
+            print("Shock triggered successfully!")
+    except Exception as e:
+        print(f"Error triggering shock: {str(e)}")
 
 def update_alarms(api_key, shock_id):
     """Updates the alarms and triggers them on the specified days."""
@@ -93,13 +102,16 @@ def update_alarms(api_key, shock_id):
             for name in list(alarms.keys()):
                 alarm_time, intensity, duration, days, repeat = alarms[name]
 
+                # Check if today is one of the specified days
                 if days and now.strftime('%A') not in days:
-                    continue
+                    continue  # Skip this alarm if today is not in the specified days
 
+                # Check if the current time is greater than or equal to the alarm time
                 if now >= alarm_time:
                     trigger_shock(api_key, shock_id, intensity, duration)
 
                     if repeat:
+                        # Schedule for the next occurrence on the correct day
                         next_day = (alarm_time + timedelta(days=1)).strftime('%A')
                         while next_day not in days:
                             alarm_time += timedelta(days=1)
@@ -111,35 +123,15 @@ def update_alarms(api_key, shock_id):
                         del alarms[name]
         time.sleep(30)
 
-#               _-^-_
-#               | | |
-#               —————
-
 @app.route('/')
 def index():
     with alarms_lock:
         current_alarms = alarms.copy()
     return render_template('index.html', alarms=current_alarms)
 
-@app.route('/setup', methods=['GET', 'POST'])
+@app.route('/setup')
 def setup():
-    api_key, shock_id = load_env()
-
-    if request.method == 'POST':
-        api_key = request.form['api_key']
-        shock_id = request.form['shock_id']
-
-        with open(ENV_FILE, 'w') as env_file:
-            env_file.write(f'SHOCK_API_KEY={api_key}\n')
-            env_file.write(f'SHOCK_ID={shock_id}\n')
-
-        load_dotenv(ENV_FILE)
-
-        api_key, shock_id = load_env()
-
-        return redirect(url_for('index'))
-
-    return render_template('setup.html', api_key=api_key, shock_id=shock_id)
+    return render_template('setup.html')
 
 @app.route('/add', methods=['GET', 'POST'])
 def add_alarm():

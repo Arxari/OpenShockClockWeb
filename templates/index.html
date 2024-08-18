@@ -9,7 +9,6 @@
             href="{{ url_for('static', filename='styles.css') }}"
         />
     </head>
-
     <body>
         <div class="container">
             <h1>OpenShockClock</h1>
@@ -19,12 +18,10 @@
                 <div
                     class="alarm"
                     data-alarm-time="{{ alarm[0].strftime('%Y-%m-%dT%H:%M:%S') }}"
-                    data-days="{{ ','.join(alarm[3]) }}"
                 >
                     <h3>{{ name }}</h3>
                     <p>Intensity: {{ alarm[1] }}</p>
                     <p>Duration: {{ alarm[2] / 1000 }} seconds</p>
-                    <p>Days: {{ ', '.join(alarm[3]) }}</p>
                     <p>Time Until Shock: <span class="countdown"></span></p>
                 </div>
                 {% endfor %}
@@ -47,32 +44,7 @@
                     const alarmTime = new Date(
                         alarm.dataset.alarmTime,
                     ).getTime();
-                    const days = alarm.dataset.days.split(",");
-                    const nowDay = new Date().toLocaleDateString("en-US", {
-                        weekday: "long",
-                    });
-
-                    let nextAlarmTime = alarmTime;
-                    if (!days.includes(nowDay)) {
-                        let nextDayOffset = 0;
-                        do {
-                            nextDayOffset += 1;
-                            nextAlarmTime =
-                                alarmTime + nextDayOffset * 24 * 60 * 60 * 1000;
-                            const nextDayName = new Date(
-                                nextAlarmTime,
-                            ).toLocaleDateString("en-US", { weekday: "long" });
-                        } while (
-                            !days.includes(
-                                new Date(nextAlarmTime).toLocaleDateString(
-                                    "en-US",
-                                    { weekday: "long" },
-                                ),
-                            )
-                        );
-                    }
-
-                    const timeDifference = nextAlarmTime - now;
+                    const timeDifference = alarmTime - now;
 
                     if (timeDifference > 0) {
                         const hours = Math.floor(
@@ -89,6 +61,15 @@
                     } else {
                         alarm.querySelector(".countdown").textContent =
                             "Alarm time reached!";
+                        // Adjust the display time to reflect the next occurrence
+                        const alarmTimeNextOccurrence = new Date(
+                            alarm.dataset.alarmTime,
+                        );
+                        alarmTimeNextOccurrence.setDate(
+                            alarmTimeNextOccurrence.getDate() + 1,
+                        );
+                        alarm.dataset.alarmTime =
+                            alarmTimeNextOccurrence.toISOString();
                     }
                 });
             }
