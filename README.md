@@ -7,8 +7,8 @@ A python flask implementation of [OpenShockClock](https://github.com/Arxari/Open
 - A UI that is both functional, looks good and makes sense
 
 #### v0.8.0 - To be revealed
-- Moved from Flask to a proper server
-- Docker container
+- Moved from Flask to a proper server if needed
+- Docker container if needed
 
 #### v0.9.0 - To be revealed
 - User accounts
