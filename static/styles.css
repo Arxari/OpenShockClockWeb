@@ -1,5 +1,5 @@
 body {
-    font-family: Arial, sans-serif; /* Tempted to change this font */
+    font-family: Arial, sans-serif;
     background-color: #131516;
     margin: 0;
     padding: 0;
@@ -76,6 +76,7 @@ a:hover {
 }
 
 input[type="text"],
+input[type="password"],
 input[type="number"],
 input[type="time"],
 select {
@@ -89,6 +90,7 @@ select {
 }
 
 input[type="text"]:focus,
+input[type="password"]:focus,
 input[type="number"]:focus,
 input[type="time"]:focus,
 select:focus {
@@ -98,34 +100,4 @@ select:focus {
 
 .form-group {
     margin-bottom: 15px;
-}
-
-.toggle-button {
-    width: 60px;
-    height: 30px;
-    background-color: #1a1d1f;
-    border-radius: 15px;
-    cursor: pointer;
-    position: relative;
-    transition: background-color 0.3s;
-    display: inline-block;
-}
-
-.toggle-button.active {
-    background-color: #ff5c82;
-}
-
-.toggle-thumb {
-    width: 26px;
-    height: 26px;
-    background-color: #ffffff;
-    border-radius: 50%;
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    transition: left 0.3s;
-}
-
-.toggle-button.active .toggle-thumb {
-    left: 32px;
 }

@@ -61,15 +61,10 @@
                     } else {
                         alarm.querySelector(".countdown").textContent =
                             "Alarm time reached!";
-                        // Adjust the display time to reflect the next occurrence
-                        const alarmTimeNextOccurrence = new Date(
-                            alarm.dataset.alarmTime,
+                        const nextAlarmTime = new Date(
+                            alarmTime + 24 * 60 * 60 * 1000,
                         );
-                        alarmTimeNextOccurrence.setDate(
-                            alarmTimeNextOccurrence.getDate() + 1,
-                        );
-                        alarm.dataset.alarmTime =
-                            alarmTimeNextOccurrence.toISOString();
+                        alarm.dataset.alarmTime = nextAlarmTime.toISOString();
                     }
                 });
             }
