@@ -7,14 +7,17 @@ A python flask implementation of [OpenShockClock](https://github.com/Arxari/Open
 - A UI that is both functional, looks good and makes sense
 
 #### v0.8.0 - Dijkstra
-- Moved from Flask to a proper server
-- Docker container
+- User accounts and simolatenous alarm handling
 
 #### v0.9.0 - To be revealed
-- User accounts
-- Quality of life features, such as setting the alarms for specific days of the week
-
+- Ability to have a vibration go off one minute before the alarm goes off
+- Docker container
+  
 #### v1.0.0 - To be revealed
 - A public use instance
 - A mobile webwrapper app
+- Ability to set the alarms for specific days of the week
+- Website and code cleanup
 - All known bugs squashed
+
+#### v1.1.0 - To be revealed
