@@ -4,7 +4,8 @@
 Use your [OpenShock](https://openshock.org/) shocker as an alarm clock.
 No more struggling to wake up, no more very loud alarms, just one shocker and a website.
 
-#### 🎉 Version goals 🎉
+<details open>
+</summary>#### 🎉 Version goals 🎉</summary>
 
 ##### v0.7.0 - Cerf & Kahn
 - A UI that is both functional, looks good and makes sense
@@ -24,3 +25,5 @@ No more struggling to wake up, no more very loud alarms, just one shocker and a 
 - All known bugs squashed
 
 #### v1.1.0 - To be revealed
+
+</details open>
