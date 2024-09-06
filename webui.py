@@ -13,6 +13,10 @@ USER_DIR = os.path.join(os.path.dirname(__file__), 'users')
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
+app.logger.disabled = True
+log = logging.getLogger('werkzeug')
+log.disabled = True
+
 user_alarm_threads = {}
 
 def load_user_config(username):
@@ -136,6 +140,15 @@ def start_user_alarm_thread(username):
     user_alarm_threads[username] = thread
     logging.info(f"Started alarm thread for user {username}")
 
+def initialize_existing_users():
+    """Initialize alarm threads for all existing users on startup."""
+    if os.path.exists(os.path.join(USER_DIR, 'users.txt')):
+        with open(os.path.join(USER_DIR, 'users.txt'), 'r') as f:
+            for line in f:
+                username = line.strip().split(':')[0]
+                logging.info(f"Initializing alarm thread for existing user: {username}")
+                start_user_alarm_thread(username)
+
 @app.route('/')
 def index():
     if 'username' not in session:
@@ -242,4 +255,8 @@ if __name__ == '__main__':
     if not os.path.exists(USER_DIR):
         os.makedirs(USER_DIR)
 
-    app.run(debug=True)
+    logging.info("Starting OpenShockClock application")
+    initialize_existing_users()
+    logging.info("Initialization complete. Starting Flask server.")
+
+    app.run(debug=False)
