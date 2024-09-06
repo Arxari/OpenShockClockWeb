@@ -6,7 +6,7 @@ A python flask implementation of [OpenShockClock](https://github.com/Arxari/Open
 ##### v0.7.0 - Cerf & Kahn
 - A UI that is both functional, looks good and makes sense
 
-#### v0.8.0 - To be revealed
+#### v0.8.0 - Dijkstra
 - Moved from Flask to a proper server
 - Docker container
 
