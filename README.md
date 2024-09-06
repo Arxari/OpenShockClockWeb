@@ -1,22 +1,20 @@
 ### Open Shock Clock on the web!
 A python flask implementation of [OpenShockClock](https://github.com/Arxari/OpenShockClock)
 
-This is dev branch for Users.
+#### Version goals
 
-#### For developers
+##### v0.7.0 - Cerf & Kahn
+- A UI that is both functional, looks good and makes sense
 
-All user and alarm related data is stored in the `users` folder.
+#### v0.8.0 - To be revealed
+- Moved from Flask to a proper server
+- Docker container
 
-User usernames and passwords are stored in the `users.txt` file.
+#### v0.9.0 - To be revealed
+- User accounts
+- Quality of life features, such as setting the alarms for specific days of the week
 
-The `config.txt` file contains the user's configuration.
-
-The `env` file contains the user's api key and shock id.
-
-When a user creates an account, the webui.py script will create a folder in the `users` folder with the username as the folder name.
-
-**The goal of this branch**
-Make OpenShockClock viable to be hosted on the web. This means users can create their own accounts, create their own alarms, and all of those accouns can be access concurrently and all alarms are active, this means that if user A and user B have an alarm set for 8AM, it will go off for 8AM for both with their specified selections.
-Users should also be able to create new alarms while an alarm is running without the host server having to be re-ran.
-
-Later down the road, more features will be added, but this is priority.
+#### v1.0.0 - To be revealed
+- A public use instance
+- A mobile webwrapper app
+- All known bugs squashed
