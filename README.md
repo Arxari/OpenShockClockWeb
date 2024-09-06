@@ -1,7 +1,7 @@
 ### Open Shock Clock on the web!
 A python flask implementation of [OpenShockClock](https://github.com/Arxari/OpenShockClock)
 
-#### Version goals
+#### 🎉 Version goals 🎉
 
 ##### v0.7.0 - Cerf & Kahn
 - A UI that is both functional, looks good and makes sense
