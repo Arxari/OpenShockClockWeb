@@ -9,7 +9,7 @@ A python flask implementation of [OpenShockClock](https://github.com/Arxari/Open
 #### v0.8.0 - Dijkstra
 - User accounts and simolatenous alarm handling
 
-#### v0.9.0 - To be revealed
+#### v0.9.0 - Tanenbaum
 - Ability to have a vibration go off one minute before the alarm goes off
 - Docker container
   
