@@ -160,7 +160,8 @@ def index():
     username = session['username']
     api_key, shock_id = load_user_env(username)
     alarms = load_user_config(username)
-    return render_template('index.html', alarms=alarms)
+    env_file_exists = os.path.exists(os.path.join(USER_DIR, username, '.env'))
+    return render_template('index.html', alarms=alarms, env_file_exists=env_file_exists)
 
 @app.route('/add', methods=['GET', 'POST'])
 def add_alarm():

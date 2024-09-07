@@ -114,6 +114,33 @@ select:focus {
     color: #ff5c82;
 }
 
+.setup-button {
+    transition: all 0.3s ease;
+}
+
+.setup-button.glow {
+    animation: glow 1.5s ease-in-out infinite alternate;
+    box-shadow:
+        0 0 5px #ff5c82,
+        0 0 10px #ff5c82,
+        0 0 15px #ff5c82;
+}
+
+@keyframes glow {
+    from {
+        box-shadow:
+            0 0 5px #ff5c82,
+            0 0 10px #ff5c82,
+            0 0 15px #ff5c82;
+    }
+    to {
+        box-shadow:
+            0 0 10px #ff5c82,
+            0 0 20px #ff5c82,
+            0 0 30px #ff5c82;
+    }
+}
+
 @media screen and (min-width: 768px) {
     .alarm-list {
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));

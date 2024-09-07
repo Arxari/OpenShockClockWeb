@@ -12,11 +12,12 @@
     <body>
         <div class="container">
             <h1>OpenShockClock</h1>
+
             <div class="alarm-list">
                 {% for name, alarm in alarms.items() %}
                 <div
                     class="alarm"
-                    data-alarm-time="{{ alarm[0].strftime('%Y-%m-%dT%H:%M:%S') }}"
+                    alarm-time="{{ alarm[0].strftime('%Y-%m-%dT%H:%M:%S') }}"
                 >
                     <div class="alarm-header">
                         <h3>{{ name }}</h3>
@@ -86,46 +87,51 @@
                 </div>
                 {% endfor %}
             </div>
+
             <div class="buttons">
-                <a href="{{ url_for('add_alarm') }}">
-                    <button>Add Alarm</button>
-                </a>
+                <a href="{{ url_for('add_alarm') }}"
+                    ><button>Add Alarm</button></a
+                >
                 <a href="{{ url_for('setup') }}">
-                    <button>Setup API and Shocker ID</button>
+                    <button
+                        class="setup-button {% if not env_file_exists %}glow{% endif %}"
+                    >
+                        Setup API and Shocker ID
+                    </button>
                 </a>
             </div>
         </div>
+
         <script>
             function updateCountdowns() {
-                const now = new Date().getTime();
-                document.querySelectorAll(".alarm").forEach((alarm) => {
+                const alarms = document.querySelectorAll(".alarm");
+                alarms.forEach((alarm) => {
                     const alarmTime = new Date(
-                        alarm.dataset.alarmTime,
-                    ).getTime();
-                    const timeDifference = alarmTime - now;
-                    if (timeDifference > 0) {
-                        const hours = Math.floor(
-                            timeDifference / (1000 * 60 * 60),
-                        );
+                        alarm.getAttribute("alarm-time"),
+                    );
+                    const now = new Date();
+                    const timeDiff = alarmTime - now;
+
+                    if (timeDiff > 0) {
+                        const hours = Math.floor(timeDiff / (1000 * 60 * 60));
                         const minutes = Math.floor(
-                            (timeDifference % (1000 * 60 * 60)) / (1000 * 60),
+                            (timeDiff % (1000 * 60 * 60)) / (1000 * 60),
                         );
                         const seconds = Math.floor(
-                            (timeDifference % (1000 * 60)) / 1000,
+                            (timeDiff % (1000 * 60)) / 1000,
                         );
+
                         alarm.querySelector(".countdown").textContent =
                             `${hours}h ${minutes}m ${seconds}s`;
                     } else {
                         alarm.querySelector(".countdown").textContent =
-                            "Alarm time reached!";
-                        const nextAlarmTime = new Date(
-                            alarmTime + 24 * 60 * 60 * 1000,
-                        );
-                        alarm.dataset.alarmTime = nextAlarmTime.toISOString();
+                            "Shock!";
                     }
                 });
             }
+
             setInterval(updateCountdowns, 1000);
+            updateCountdowns();
         </script>
     </body>
 </html>
