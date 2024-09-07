@@ -14,7 +14,7 @@ No more struggling to wake up, no more very loud alarms, just one shocker and a 
 - User accounts and simolatenous alarm handling
 
 #### v0.9.0 - Tanenbaum
-- Ability to delete alarms
+- Ability to edit and delete alarms
 - Ability to have a vibration go off one minute before the alarm goes off
 - Docker container
 
