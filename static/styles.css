@@ -6,32 +6,28 @@ body {
     color: #ffffff;
 }
 .container {
-    width: 80%;
-    margin: auto;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0;
     padding: 20px;
     background-color: #131516;
-    margin-top: 20px;
 }
 h1,
 h3 {
     color: #ffffff;
 }
 .alarm-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+    justify-content: start;
+    align-items: start;
 }
 .alarm {
     padding: 15px;
     border-radius: 5px;
-    background-color: #131516;
-    flex: 1 1 calc(33.33% - 20px);
-    margin: 10px 0;
-}
-@media screen and (max-width: 768px) {
-    .alarm {
-        flex: 1 1 100%;
-    }
+    display: flex;
+    flex-direction: column;
 }
 .countdown {
     font-weight: bold;
@@ -113,10 +109,22 @@ select:focus {
     opacity: 1;
 }
 
-.edit-button svg {
-    color: #4caf50;
+.edit-button svg,
+.delete-button svg {
+    color: #ff5c82;
 }
 
-.delete-button svg {
-    color: #f44336;
+@media screen and (min-width: 768px) {
+    .alarm-list {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+}
+
+@media screen and (min-width: 1200px) {
+    .alarm-list {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .container {
+        margin-left: 0;
+    }
 }
