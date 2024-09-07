@@ -41,6 +41,9 @@ def save_alarm_to_user_config(username, alarm_name, alarm_time, intensity, durat
     if os.path.exists(user_config_file):
         config.read(user_config_file)
 
+    if alarm_name in config.sections():
+        config.remove_section(alarm_name)
+
     config[alarm_name] = {
         'time': alarm_time.strftime('%Y-%m-%d %H:%M:%S'),
         'intensity': str(intensity),
@@ -184,6 +187,84 @@ def add_alarm():
 
         return redirect(url_for('index'))
     return render_template('add_alarm.html')
+
+@app.route('/edit/<alarm_name>', methods=['GET', 'POST'])
+def edit_alarm(alarm_name):
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    username = session['username']
+    user_config_file = os.path.join(USER_DIR, username, 'config.txt')
+    config = configparser.ConfigParser()
+
+    if not os.path.exists(user_config_file):
+        flash('User configuration not found.')
+        return redirect(url_for('index'))
+
+    config.read(user_config_file)
+
+    if alarm_name not in config.sections():
+        flash('Alarm not found.')
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        new_name = request.form['name']
+        intensity = int(request.form['intensity'])
+        duration = int(float(request.form['duration']) * 1000)
+        time_str = request.form['time']
+        alarm_time = datetime.strptime(time_str, "%H:%M").replace(
+            year=datetime.now().year,
+            month=datetime.now().month,
+            day=datetime.now().day
+        )
+        if alarm_time < datetime.now():
+            alarm_time += timedelta(days=1)
+
+        config.remove_section(alarm_name)
+
+        config[new_name] = {
+            'time': alarm_time.strftime('%Y-%m-%d %H:%M:%S'),
+            'intensity': str(intensity),
+            'duration': str(duration)
+        }
+
+        with open(user_config_file, 'w') as configfile:
+            config.write(configfile)
+
+        flash('Alarm updated successfully.')
+        return redirect(url_for('index'))
+
+    alarm_time = datetime.strptime(config[alarm_name]['time'], '%Y-%m-%d %H:%M:%S')
+    intensity = config[alarm_name].getint('intensity')
+    duration = config[alarm_name].getint('duration')
+
+    return render_template('edit_alarm.html', alarm_name=alarm_name,
+                           time=alarm_time.strftime("%H:%M"),
+                           intensity=intensity,
+                           duration=duration/1000)
+
+@app.route('/delete/<alarm_name>')
+def delete_alarm(alarm_name):
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    username = session['username']
+    user_config_file = os.path.join(USER_DIR, username, 'config.txt')
+    config = configparser.ConfigParser()
+
+    if os.path.exists(user_config_file):
+        config.read(user_config_file)
+        if alarm_name in config.sections():
+            config.remove_section(alarm_name)
+            with open(user_config_file, 'w') as configfile:
+                config.write(configfile)
+            flash('Alarm deleted successfully.')
+        else:
+            flash('Alarm not found.')
+    else:
+        flash('User configuration not found.')
+
+    return redirect(url_for('index'))
 
 @app.route('/setup', methods=['GET', 'POST'])
 def setup():
