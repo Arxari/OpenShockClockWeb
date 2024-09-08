@@ -30,11 +30,12 @@ def load_user_config(username):
             alarm_time = datetime.strptime(config[section]['time'], '%Y-%m-%d %H:%M:%S')
             intensity = int(config[section]['intensity'])
             duration = int(config[section]['duration'])
-            alarms[section] = (alarm_time, intensity, duration)
+            vibrate_before = config[section].getboolean('vibrate_before', fallback=False)
+            alarms[section] = (alarm_time, intensity, duration, vibrate_before)
     logging.debug(f"Loaded alarms for user {username}: {alarms}")
     return alarms
 
-def save_alarm_to_user_config(username, alarm_name, alarm_time, intensity, duration):
+def save_alarm_to_user_config(username, alarm_name, alarm_time, intensity, duration, vibrate_before):
     """Saves an alarm to the user's config.txt file."""
     user_config_file = os.path.join(USER_DIR, username, 'config.txt')
     config = configparser.ConfigParser()
@@ -47,12 +48,13 @@ def save_alarm_to_user_config(username, alarm_name, alarm_time, intensity, durat
     config[alarm_name] = {
         'time': alarm_time.strftime('%Y-%m-%d %H:%M:%S'),
         'intensity': str(intensity),
-        'duration': str(duration)
+        'duration': str(duration),
+        'vibrate_before': str(vibrate_before)
     }
 
     with open(user_config_file, 'w') as configfile:
         config.write(configfile)
-    logging.debug(f"Saved alarm for user {username}: {alarm_name} at {alarm_time}")
+    logging.debug(f"Saved alarm for user {username}: {alarm_name} at {alarm_time}, vibrate_before: {vibrate_before}")
 
 def load_user_env(username):
     """Loads the API key and Shock ID from the user's .env file."""
@@ -79,8 +81,8 @@ def save_user_env(username, api_key, shock_id):
         config.write(configfile)
     logging.debug(f"Saved env for user {username}: API Key: {'*' * len(api_key)}, Shock ID: {shock_id}")
 
-def trigger_shock(api_key, shock_id, intensity, duration):
-    """Sends a shock command to the OpenShock API."""
+def trigger_shock(api_key, shock_id, intensity, duration, shock_type='Shock'):
+    """Sends a shock or vibrate command to the OpenShock API."""
     url = 'https://api.shocklink.net/2/shockers/control'
     headers = {
         'accept': 'application/json',
@@ -91,7 +93,7 @@ def trigger_shock(api_key, shock_id, intensity, duration):
     payload = {
         'shocks': [{
             'id': shock_id,
-            'type': 'Shock',
+            'type': shock_type,
             'intensity': intensity,
             'duration': duration,
             'exclusive': True
@@ -102,9 +104,9 @@ def trigger_shock(api_key, shock_id, intensity, duration):
     try:
         response = requests.post(url=url, headers=headers, json=payload)
         response.raise_for_status()
-        logging.info(f"Shock triggered successfully: Intensity {intensity}, Duration {duration}")
+        logging.info(f"{shock_type} triggered successfully: Intensity {intensity}, Duration {duration}")
     except requests.RequestException as e:
-        logging.error(f"Failed to send shock. Error: {str(e)}")
+        logging.error(f"Failed to send {shock_type}. Error: {str(e)}")
 
 def update_alarms(username):
     """Updates the alarms for the next day and checks if they need to be triggered."""
@@ -119,14 +121,18 @@ def update_alarms(username):
             continue
 
         now = datetime.now()
-        for name, (alarm_time, intensity, duration) in list(alarms.items()):
+        for name, (alarm_time, intensity, duration, vibrate_before) in list(alarms.items()):
+            if vibrate_before and now >= alarm_time - timedelta(minutes=1) and now < alarm_time:
+                logging.info(f"Triggering vibration for alarm {name} for user {username}")
+                trigger_shock(api_key, shock_id, 100, 5000, 'Vibrate')
+
             if now >= alarm_time:
                 logging.info(f"Triggering alarm {name} for user {username}")
                 trigger_shock(api_key, shock_id, intensity, duration)
 
                 next_alarm_time = alarm_time + timedelta(days=1)
-                alarms[name] = (next_alarm_time, intensity, duration)
-                save_alarm_to_user_config(username, name, next_alarm_time, intensity, duration)
+                alarms[name] = (next_alarm_time, intensity, duration, vibrate_before)
+                save_alarm_to_user_config(username, name, next_alarm_time, intensity, duration, vibrate_before)
                 logging.info(f"Updated alarm {name} for user {username} to next day: {next_alarm_time}")
 
         time.sleep(60)
@@ -175,6 +181,7 @@ def add_alarm():
         intensity = int(request.form['intensity'])
         duration = int(float(request.form['duration']) * 1000)
         time_str = request.form['time']
+        vibrate_before = 'vibrate_before' in request.form
         alarm_time = datetime.strptime(time_str, "%H:%M").replace(
             year=datetime.now().year,
             month=datetime.now().month,
@@ -182,7 +189,7 @@ def add_alarm():
         )
         if alarm_time < datetime.now():
             alarm_time += timedelta(days=1)
-        save_alarm_to_user_config(username, name, alarm_time, intensity, duration)
+        save_alarm_to_user_config(username, name, alarm_time, intensity, duration, vibrate_before)
 
         start_user_alarm_thread(username)
 
@@ -213,6 +220,7 @@ def edit_alarm(alarm_name):
         intensity = int(request.form['intensity'])
         duration = int(float(request.form['duration']) * 1000)
         time_str = request.form['time']
+        vibrate_before = 'vibrate_before' in request.form
         alarm_time = datetime.strptime(time_str, "%H:%M").replace(
             year=datetime.now().year,
             month=datetime.now().month,
@@ -226,7 +234,8 @@ def edit_alarm(alarm_name):
         config[new_name] = {
             'time': alarm_time.strftime('%Y-%m-%d %H:%M:%S'),
             'intensity': str(intensity),
-            'duration': str(duration)
+            'duration': str(duration),
+            'vibrate_before': str(vibrate_before)
         }
 
         with open(user_config_file, 'w') as configfile:
@@ -238,11 +247,13 @@ def edit_alarm(alarm_name):
     alarm_time = datetime.strptime(config[alarm_name]['time'], '%Y-%m-%d %H:%M:%S')
     intensity = config[alarm_name].getint('intensity')
     duration = config[alarm_name].getint('duration')
+    vibrate_before = config[alarm_name].getboolean('vibrate_before', fallback=False)
 
     return render_template('edit_alarm.html', alarm_name=alarm_name,
                            time=alarm_time.strftime("%H:%M"),
                            intensity=intensity,
-                           duration=duration/1000)
+                           duration=duration/1000,
+                           vibrate_before=vibrate_before)
 
 @app.route('/delete/<alarm_name>')
 def delete_alarm(alarm_name):

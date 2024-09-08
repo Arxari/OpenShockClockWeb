@@ -83,22 +83,26 @@
                     </div>
                     <p>Intensity: {{ alarm[1] }}</p>
                     <p>Duration: {{ alarm[2] / 1000 }} seconds</p>
+                    <p>
+                        Vibration: {% if alarm[3] %}On{% else %}Off{% endif %}
+                    </p>
                     <p>Time Until Shock: <span class="countdown"></span></p>
                 </div>
                 {% endfor %}
             </div>
 
             <div class="buttons">
-                <a href="{{ url_for('add_alarm') }}"
-                    ><button>Add Alarm</button></a
+                <button
+                    onclick="window.location.href='{{ url_for('add_alarm') }}'"
                 >
-                <a href="{{ url_for('setup') }}">
-                    <button
-                        class="setup-button {% if not env_file_exists %}glow{% endif %}"
-                    >
-                        Setup API and Shocker ID
-                    </button>
-                </a>
+                    Add Alarm
+                </button>
+                <button
+                    onclick="window.location.href='{{ url_for('setup') }}'"
+                    class="setup-button {% if not env_file_exists %}glow{% endif %}"
+                >
+                    Setup API and Shocker ID
+                </button>
             </div>
         </div>
 
@@ -120,12 +124,11 @@
                         const seconds = Math.floor(
                             (timeDiff % (1000 * 60)) / 1000,
                         );
-
                         alarm.querySelector(".countdown").textContent =
                             `${hours}h ${minutes}m ${seconds}s`;
                     } else {
                         alarm.querySelector(".countdown").textContent =
-                            "Shock!";
+                            "Alarm triggered";
                     }
                 });
             }

@@ -119,25 +119,27 @@ select:focus {
 }
 
 .setup-button.glow {
-    animation: glow 1.5s ease-in-out infinite alternate;
-    box-shadow:
-        0 0 5px #ff5c82,
-        0 0 10px #ff5c82,
-        0 0 15px #ff5c82;
+    animation: glow 2s ease-in-out infinite;
 }
 
 @keyframes glow {
-    from {
+    0% {
         box-shadow:
             0 0 5px #ff5c82,
             0 0 10px #ff5c82,
             0 0 15px #ff5c82;
     }
-    to {
+    50% {
         box-shadow:
             0 0 10px #ff5c82,
             0 0 20px #ff5c82,
             0 0 30px #ff5c82;
+    }
+    100% {
+        box-shadow:
+            0 0 5px #ff5c82,
+            0 0 10px #ff5c82,
+            0 0 15px #ff5c82;
     }
 }
 
