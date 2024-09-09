@@ -26,6 +26,7 @@
                         required
                     />
                 </div>
+
                 <div class="form-group">
                     <label for="intensity">Intensity (0-100):</label>
                     <input
@@ -38,6 +39,7 @@
                         required
                     />
                 </div>
+
                 <div class="form-group">
                     <label for="duration">Duration (seconds):</label>
                     <input
@@ -50,6 +52,7 @@
                         required
                     />
                 </div>
+
                 <div class="form-group">
                     <label for="time">Time (HH:MM):</label>
                     <input
@@ -60,26 +63,32 @@
                         required
                     />
                 </div>
-                <div class="form-group">
-                    <label>
-                        <input
-                            type="checkbox"
-                            id="vibrate_before"
-                            name="vibrate_before"
-                            {%
-                            if
-                            vibrate_before
-                            %}checked{%
-                            endif
-                            %}
-                        />
+
+                <div class="form-group checkbox-group">
+                    <input
+                        type="checkbox"
+                        id="vibrate_before"
+                        name="vibrate_before"
+                        {%
+                        if
+                        vibrate_before
+                        %}checked{%
+                        endif
+                        %}
+                    />
+                    <label for="vibrate_before">
                         Vibrate for 5 seconds at intensity 100, 1 minute before
                         alarm
                     </label>
                 </div>
-                <button type="submit">Update Alarm</button>
+
+                <div class="button-group">
+                    <button type="submit">Update Alarm</button>
+                    <a href="{{ url_for('index') }}" class="button"
+                        >Back to Home</a
+                    >
+                </div>
             </form>
-            <a href="{{ url_for('index') }}" class="button">Back to Home</a>
         </div>
     </body>
 </html>
