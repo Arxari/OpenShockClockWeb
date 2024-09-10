@@ -1,3 +1,5 @@
+{% extends "bar.html" %} {% block content %}
+
 <!doctype html>
 <html lang="en">
     <head>
@@ -61,11 +63,10 @@
 
                 <div class="button-group">
                     <button type="submit">Save Alarm</button>
-                    <a href="{{ url_for('index') }}" class="button"
-                        >Back to Home</a
-                    >
                 </div>
             </form>
         </div>
     </body>
 </html>
+
+{% endblock %}
