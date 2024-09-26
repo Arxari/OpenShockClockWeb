@@ -6,6 +6,7 @@ import threading
 import time
 import requests
 import logging
+import bcrypt
 
 app = Flask(__name__)
 app.secret_key = 'arxdeari'
@@ -303,6 +304,13 @@ def register():
         username = request.form['username']
         password = request.form['password']
 
+        if os.path.exists(os.path.join(USER_DIR, 'users.txt')):
+            with open(os.path.join(USER_DIR, 'users.txt'), 'r') as f:
+                existing_users = [line.strip().split(':')[0] for line in f]
+            if username in existing_users:
+                flash('Username already exists. Please choose a different one.')
+                return redirect(url_for('register'))
+
         user_folder = os.path.join(USER_DIR, username)
         if not os.path.exists(user_folder):
             os.makedirs(user_folder)
@@ -311,8 +319,10 @@ def register():
         with open(user_config_file, 'w') as configfile:
             configfile.write('')
 
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
         with open(os.path.join(USER_DIR, 'users.txt'), 'a') as f:
-            f.write(f"{username}:{password}\n")
+            f.write(f"{username}:{hashed_password.decode('utf-8')}\n")
 
         flash('Registration successful! Please login.')
         return redirect(url_for('login'))
@@ -327,7 +337,7 @@ def login():
         with open(os.path.join(USER_DIR, 'users.txt'), 'r') as f:
             users = dict(line.strip().split(':') for line in f)
 
-        if username in users and users[username] == password:
+        if username in users and bcrypt.checkpw(password.encode('utf-8'), users[username].encode('utf-8')):
             session['username'] = username
             start_user_alarm_thread(username)
             return redirect(url_for('index'))
